@@ -1,0 +1,102 @@
+# 
+# Wavefront material file
+# Converted by the DEEP Exploration  Deep Exploration 6.5 x64 6.5.0.9182
+# Right Hemisphere, LTD
+# http://www.righthemisphere.com/
+# 
+
+newmtl map
+Ka 0.117647 0.117647 0.117647
+Kd 1 1 1
+Ks 0.9 0.9 0.9
+illum 2
+Ns 256
+map_Kd Squash_racquet_diffuse.jpg
+map_bump 
+bump 
+map_opacity 
+map_d 
+refl 
+map_kS 
+map_kA 
+map_Ns 
+
+newmtl white
+Ka 0.929412 0.929412 0.929412
+Kd 0.929412 0.929412 0.929412
+Ks 0.9 0.9 0.9
+illum 2
+Ns 11.3137
+map_Kd 
+map_bump 
+bump 
+map_opacity 
+map_d 
+refl 
+map_kS 
+map_kA 
+map_Ns 
+
+newmtl black
+Ka 0.117647 0.117647 0.117647
+Kd 0.117647 0.117647 0.117647
+Ks 0.9 0.9 0.9
+illum 2
+Ns 5.65685
+map_Kd 
+map_bump Squash_racquet_normal.jpg
+bump Squash_racquet_normal.jpg
+map_opacity 
+map_d 
+refl 
+map_kS 
+map_kA 
+map_Ns 
+
+newmtl Chrome_Diffuse
+Ka 0.392157 0.392157 0.392157
+Kd 0.392157 0.392157 0.392157
+Ks 0.9 0.9 0.9
+illum 2
+Ns 48.5029
+map_Kd 
+map_bump 
+bump 
+map_opacity 
+map_d 
+refl 
+map_kS 
+map_kA 
+map_Ns 
+
+newmtl map0
+Ka 0.117647 0.117647 0.117647
+Kd 1 1 1
+Ks 0.9 0.9 0.9
+illum 2
+Ns 5.65685
+map_Kd Squash_racquet_diffuse.jpg
+map_bump 
+bump 
+map_opacity 
+map_d 
+refl 
+map_kS 
+map_kA 
+map_Ns 
+
+newmtl Squash_racquet
+Ka 0.117647 0.117647 0.117647
+Kd 0.117647 0.117647 0.117647
+Ks 0.9 0.9 0.9
+illum 2
+Ns 5.65685
+map_Kd 
+map_bump 
+bump 
+map_opacity 
+map_d 
+refl 
+map_kS 
+map_kA 
+map_Ns 

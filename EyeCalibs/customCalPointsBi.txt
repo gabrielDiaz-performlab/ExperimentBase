@@ -1,0 +1,45 @@
+fkey_cmd 9 { clearHistory; Both:calibration_PointDump }
+//
+binocular_Mode ON
+stereoDisplay ON
+//
+calibration_Points 9
+calibration_PointLocationMethod Custom
+calibration_PresentationOrder Sequential
+EyeAcalibration_CustomPoint  1  0.0000  0.0000
+EyeAcalibration_CustomPoint  2  0.0000  0.0000
+EyeAcalibration_CustomPoint  3  0.0000  0.0000
+EyeAcalibration_CustomPoint  4  0.0000  0.0000
+EyeAcalibration_CustomPoint  5  0.0000  0.0000
+EyeAcalibration_CustomPoint  6  0.0000  0.0000
+EyeAcalibration_CustomPoint  7  0.0000  0.0000
+EyeAcalibration_CustomPoint  8  0.0000  0.0000
+EyeAcalibration_CustomPoint  9  0.0000  0.0000
+EyeBcalibration_CustomPoint  1  0.0000  0.0000
+EyeBcalibration_CustomPoint  2  0.0000  0.0000
+EyeBcalibration_CustomPoint  3  0.0000  0.0000
+EyeBcalibration_CustomPoint  4  0.0000  0.0000
+EyeBcalibration_CustomPoint  5  0.0000  0.0000
+EyeBcalibration_CustomPoint  6  0.0000  0.0000
+EyeBcalibration_CustomPoint  7  0.0000  0.0000
+EyeBcalibration_CustomPoint  8  0.0000  0.0000
+EyeBcalibration_CustomPoint  9  0.0000  0.0000
+//
+gazeSpaceGraphicsOptions -All
+gazeSpaceGraphicsOptions +Cal
+//
+calibration_WarningTime 5
+calibration_StimulusDuration 40
+calibration_ISI 2
+//
+stimulus_ImageHidden True
+stimulus_BackgroundColor	0	0	0
+calibration_BackgroundColor	0	0	0
+setWindow	CHILD	GazeSpace
+setWindow	SHOW	GazeSpace
+moveWindow	GazeSpace	700	1	1146	458
+moveWindow	Main	0	0	1855	1025
+stimWind_CustomStatic 3200 0 4480 1024
+stimWind_FullDisplay Secondary
+viewSource 2
+END

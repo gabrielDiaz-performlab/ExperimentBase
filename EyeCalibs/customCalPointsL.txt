@@ -1,0 +1,36 @@
+fkey_cmd 9 { clearHistory; Both:calibration_PointDump }
+//
+binocular_Mode OFF
+stereoDisplay OFF
+//
+calibration_Points 9
+calibration_PointLocationMethod Custom
+calibration_PresentationOrder Sequential
+calibration_CustomPoint  1  0.0000  0.0000
+calibration_CustomPoint  2  0.0000  0.0000
+calibration_CustomPoint  3  0.0000  0.0000
+calibration_CustomPoint  4  0.0000  0.0000
+calibration_CustomPoint  5  0.0000  0.0000
+calibration_CustomPoint  6  0.0000  0.0000
+calibration_CustomPoint  7  0.0000  0.0000
+calibration_CustomPoint  8  0.0000  0.0000
+calibration_CustomPoint  9  0.0000  0.0000
+//
+gazeSpaceGraphicsOptions -All
+gazeSpaceGraphicsOptions +Cal
+//
+calibration_WarningTime 5
+calibration_StimulusDuration 40
+calibration_ISI 2
+//
+stimulus_ImageHidden True
+stimulus_BackgroundColor	0	0	0
+calibration_BackgroundColor	0	0	0
+setWindow	CHILD	GazeSpace
+setWindow	SHOW	GazeSpace
+moveWindow	GazeSpace	700	1	573	458
+moveWindow	Main	0	0	1282	1025
+stimWind_CustomStatic 1920 0 3200 1024
+stimWind_FullDisplay Custom
+viewSource SceneCamera
+END
