@@ -15,11 +15,7 @@ import datetime
 from ctypes import * # eyetrackka
 
 
-expConfigFileName = 'badmintonTest.cfg'
-#expConfigFileName = 'shortTest.cfg'
-#expConfigFileName = 'fullTest.cfg'
-
-
+expConfigFileName = 'exampleExpConfig.cfg'
 
 ft = .3048
 inch = 0.0254
@@ -30,8 +26,6 @@ nan = float('NaN')
 # Create a globally accessible soundbank.
 # To access within a member function, 
 # import the global variable with 'global soundbank'
-
-vizact.onkeydown( 'm', viz.window.screenCapture, 'image.bmp' )
 
 class soundBank():
 	def __init__(self):
@@ -118,21 +112,17 @@ class Experiment(viz.EventClass):
 #		################################################################
 #		################################################################
 #		##  Misc. Design specific items here.
-#		if( config.sysCfg['use_wiimote ']):
-#			# Create wiimote holder
-#			self.wiimote = 0
-#			self.connectWiiMote()
-		
+
 		if( config.wiimote ):
 			self.registerWiimoteActions()
 		
 		# Setup launch trigger
-		self.launchKeyIsCurrentlyDown = False
+		#self.launchKeyIsCurrentlyDown = False
 		
-		self.minLaunchTriggerDuration = config.expCfg['experiment']['minLaunchTriggerDuration']
+		#self.minLaunchTriggerDuration = config.expCfg['experiment']['minLaunchTriggerDuration']
 		
 		# maxFlightDurTimerID times out balls a fixed dur after launch
-		self.maxFlightDurTimerID = viz.getEventID('maxFlightDurTimerID') # Generates a unique ID. 
+		#self.maxFlightDurTimerID = viz.getEventID('maxFlightDurTimerID') # Generates a unique ID. 
 		
 		################################################################
 		##  LInk up the hmd to the mainview
@@ -141,25 +131,12 @@ class Experiment(viz.EventClass):
 			
 			################################################################
 			##  Link up the hmd to the mainview
-			#if( self.config.mocap.mainViewLinkedToHead ):
 			if( self.config.use_HMD and  config.mocap.returnPointerToRigid('hmd') ):
-				#self.hmdLinkedToView = True
 				self.config.mocap.enableHMDTracking()
-				
-				#vizact.onkeydown('-',self.config.mocap.disableHMDTracking)
-				#vizact.onkeydown('=',self.config.mocap.enableHMDTracking)
-			
-			################################################################
-			##  LInk up the paddle to the mocap
-			# If there is a paddle visObj and a paddle rigid...
+						# If there is a paddle visObj and a paddle rigid...
 		
-		self.setupPaddle()
-				
-#		self.discTarg = visEnv.visObj(self.room,'cylinder',[0.5,1])
-#		self.discTarg.visNode.setPosition([0,1,20])
-#		self.discTarg.visNode.setAxisAngle(1,0,0,90)
-#		self.discTarg.applyVisToPhys()
-		
+		#self.setupPaddle()
+					
 			
 		##############################################################
 		##############################################################
@@ -203,16 +180,16 @@ class Experiment(viz.EventClass):
 		self.eventFlag = eventFlag()
 		
 	def _timerCallback(self,timerID):
+		pass
 		
-		
-		if( timerID == self.maxFlightDurTimerID ):
-			
-			
-			#print 'Ball timed out. Removing ball!'
-			
-			self.currentTrial.removeBall()
-			self.room.standingBox.visible( viz.TOGGLE )
-			self.endTrial()
+#		if( timerID == self.maxFlightDurTimerID ):
+#			
+#			
+#			#print 'Ball timed out. Removing ball!'
+#			
+#			self.currentTrial.removeBall()
+#			self.room.standingBox.visible( viz.TOGGLE )
+#			self.endTrial()
 		
 	def _checkForCollisions(self):
 		
@@ -386,18 +363,12 @@ class Experiment(viz.EventClass):
 						mocapSys.disableHMDTracking()
 					else:
 						mocapSys.enableHMDTracking()
-			elif key == 'p':
-				mocapSys.resetRigid('paddle')
-			elif key == 'P':
-				mocapSys.saveRigid('paddle')
 			elif key == 'h':
 				mocapSys.resetRigid('hmd')
 			elif key == 'H':
 				mocapSys.saveRigid('hmd')
 			elif key == 'W':
 				self.connectWiiMote()
-			elif key == 'v':
-				self.launchKeyDown()
 				
 			elif key == 'D':
 				
@@ -426,60 +397,14 @@ class Experiment(viz.EventClass):
 	
 	
 	def onKeyUp(self,key):
-				
-		if( key == 'v'):
-			self.launchKeyUp()
-			
-
-	def launchKeyDown(self):
 		
-		if( self.inProgress == True and   # Experiment ongoing
-					self.launchKeyIsCurrentlyDown == False and
-					self.currentTrial.ballInRoom == False ): # There is not already a ball
-					
-					# Start timing trigger duration 
-					# At end of trigger, launch the ball.
-					self.launchKeyIsCurrentlyDown = True
-					self.timeLaunchKeyWasPressed = viz.tick()
-					self.room.standingBox.visible( viz.TOGGLE )
-					self.currentTrial.placeBall(self.room)
-					
-	
-	def launchKeyUp(self):			
+		if( key == 'v'):
+			pass
 			
-		if( self.launchKeyIsCurrentlyDown == True ):
-			
-			self.launchKeyIsCurrentlyDown = False
-			triggerDuration = viz.tick() - self.timeLaunchKeyWasPressed
-			ballReadyToLaunch = False
-			
-			if( self.currentTrial.ballInRoom == True and
-				self.currentTrial.ballInInitialState == True and
-				self.currentTrial.ballLaunched == False):
-						
-				# Ball is ready to launch
-				
-				if( triggerDuration <= self.minLaunchTriggerDuration ):
-				
-					# Trigger not held long enough for a launch
-					soundBank.cowbell.play()
-					self.room.standingBox.visible( viz.TOGGLE )
-					self.currentTrial.removeBall()
-					#print 'Launch aborted'
-			
-				if( triggerDuration >= self.minLaunchTriggerDuration ):
-					
-					self.eventFlag.setStatus(1)
-					#print 'Ball launched'
-				
-					self.currentTrial.launchBall();
-					self.starttimer(self.maxFlightDurTimerID,self.currentTrial.ballFlightMaxDur);
-	
-			else:
-				
-				return
+			#self.launchKeyUp()
 
 	def getOutput(self):
+		
 		
 		"""
 		Returns a string describing the current state of the experiment, useful for recording.
@@ -502,293 +427,14 @@ class Experiment(viz.EventClass):
 		outputString = '* frameTime %f * ' % (viz.getFrameTime())
 		
 		outputString = outputString + '* inCalibrateBool %f * ' % (self.inCalibrateMode)
-		
 		outputString = outputString + '* eventFlag %f * ' % (self.eventFlag.status)
-		
 		outputString = outputString + '* trialType %s * ' % (self.currentTrial.trialType)
 		
 		viewPos_XYZ = viz.MainView.getPosition()
 		outputString = outputString + '[ viewPos_XYZ %f %f %f ] ' % (viewPos_XYZ[0],viewPos_XYZ[1],viewPos_XYZ[2])
-		
-		viewMat = viz.MainView.getMatrix()
-		
-		viewQUAT_XYZW = viewMat.getQuat()
-		
-		outputString = outputString + '< viewQUAT_WXYZ %f %f %f %f > ' % (viewQUAT_XYZW [0],viewQUAT_XYZW [1],viewQUAT_XYZW [2],viewQUAT_XYZW[3])
-		
-		################################################
-		################################################
-		#### Racquet data
-		
-		paddlePos_XYZ = []
-		paddleQUAT_XYZW = []
-		paddleAngVel_XYZ = []
-		
-		if( self.room.paddle ):
-			
-			paddlePos_XYZ = self.room.paddle.visNode.getPosition()
-			paddleMat = self.room.paddle.visNode.getMatrix()
-			paddleQUAT_XYZW = paddleMat.getQuat()
-			
-		else:
-			paddlePos_XYZ = [nan,nan,nan]
-			paddleQUAT_WXYZ = [nan,nan,nan,nan]
-			
-		outputString = outputString + '[ paddlePos_XYZ %f %f %f ] ' % (paddlePos_XYZ[0],paddlePos_XYZ[1],paddlePos_XYZ[2])
-		
-		outputString = outputString + '< paddleQUAT_WXYZ %f %f %f %f > ' % (paddleQUAT_XYZW[0],paddleQUAT_XYZW[1],paddleQUAT_XYZW[2],paddleQUAT_XYZW[3])
-		
-		################################################
-		################################################
-		#### BALL DATA
-
-		if( self.currentTrial.ballInRoom  ):
-		# If ball is in room, set ball position and velocity	
-			
-			theBall = self.currentTrial.ballObj;
-			
-			ballPos_XYZ = theBall.visNode.getPosition()
-			outputString = outputString + '[ ballPos_XYZ %f %f %f ] ' % (ballPos_XYZ [0],ballPos_XYZ[1],ballPos_XYZ [2])
-			
-			ballVel_XYZ = theBall.getVelocity()
-			outputString = outputString + '[ ballVel_XYZ %f %f %f ] ' % (ballVel_XYZ[0],ballVel_XYZ[1],ballVel_XYZ[2])
-			
-			ballPix_XYDist = viz.MainWindow.worldToScreen(ballPos_XYZ,viz.LEFT_EYE)
-			outputString = outputString + '[ ballPix_XYDist %f %f %f ] ' % (ballPix_XYDist[0],ballPix_XYDist[1],ballPix_XYDist[2])
-			
-		else:
-			
-			# Ball not in room.  set pos / vel to Nan
-			ballPos_XYZ = [nan,nan,nan]
-			outputString = outputString + '[ ballPos_XYZ %f %f %f ] ' % (ballPos_XYZ [0],ballPos_XYZ [1],ballPos_XYZ [2])
-			
-			ballVel_XYZ = [nan,nan,nan]
-			outputString = outputString + '[ ballVel_XYZ %f %f %f ] ' % (ballVel_XYZ [0],ballVel_XYZ [1],ballVel_XYZ [2])
-			
-			ballPix_XYDist = [nan,nan,nan]
-			outputString = outputString + '[ ballPix_XYDist %f %f %f ] ' % (ballPix_XYDist [0],ballPix_XYDist [1],ballPix_XYDist [2])
-			
-		if( self.eventFlag.status == 1 ):
-		# Launch mode.  Print initial conditions.
-			
-			outputString = outputString + '* ballDiameter %f * ' % (self.currentTrial.ballDiameter)
-			outputString = outputString + '* ballGravity %f * ' % (self.currentTrial.gravity)
-			outputString = outputString + '* ballPassingLoc %f * ' % (self.currentTrial.passingLoc)
-			outputString = outputString + '* ballElasticity %f * ' % (self.currentTrial.ballElasticity)
-			outputString = outputString + '* ballBounceDist %f * ' % (self.currentTrial.bounceDist)
-			outputString = outputString + '* ballBounceSpeed %f * ' % (self.currentTrial.bounceSpeed)
-			outputString = outputString + '* ballLaunchHeight %f * ' % (self.currentTrial.launchHeight)
-			outputString = outputString + '* ballLaunchDistance %f * ' % (self.currentTrial.launchDistance)
-			outputString = outputString + '* ballApproachAngleDegs %f * ' % (self.currentTrial.approachAngleDegs)
-			
-			outputString = outputString + '[ ballBounceLoc_XYZ %f %f %f ] ' % (self.currentTrial.ballBounceLoc_XYZ[0],self.currentTrial.ballBounceLoc_XYZ[1],self.currentTrial.ballBounceLoc_XYZ[2])
-			outputString = outputString + '[ ballInitialPos_XYZ %f %f %f ] ' % (self.currentTrial.initialPos_XYZ[0],self.currentTrial.initialPos_XYZ[1],self.currentTrial.initialPos_XYZ[2])
-			outputString = outputString + '[ initialVelocity_XYZ %f %f %f ] ' % (self.currentTrial.initialVelocity_XYZ[0],self.currentTrial.initialVelocity_XYZ[1],self.currentTrial.initialVelocity_XYZ[2])
-		
-		elif( self.eventFlag.status == 3 ):
-			# Error, in seconds, between predicted bounce time and actual bounce time
-			outputString = outputString + '* flightDurationError %f * ' % (self.currentTrial.flightDurationError)
-		elif( self.eventFlag.status == 4 ):
-			#print 'Event flag 4!  Writing paddle position!'
-			outputString = outputString + '[ ballOnPaddlePosLoc_XYZ %f %f %f ] ' % (self.currentTrial.ballOnPaddlePosLoc_XYZ[0],self.currentTrial.ballOnPaddlePosLoc_XYZ[1],self.currentTrial.ballOnPaddlePosLoc_XYZ[2])
-		
-		# The end of the trial
-		if( (self.eventFlag.status == 6 or self.eventFlag.status == 7) ): 
-			
-			# For convenicne, this ensures the var  ballOnPaddlePosLoc_XYZ will show up once per  trial
-			if ( self.currentTrial.ballHasHitPaddle == False ):
-				outputString = outputString + '[ ballOnPaddlePosLoc_XYZ %f %f %f ] ' % (nan, nan, nan)
-				#print '***** [ ballOnPaddlePosLoc_XYZ %f %f %f ] ' % (nan, nan, nan)
-		
-		##  MATRICES
-		
-		viewMat = viz.MainWindow.getMatrix(viz.LEFT_EYE)
-		invViewMat = viewMat.inverse()
-		
-		outputString = outputString + '@ invViewMat %s @ '  % (str(invViewMat.get()))
-		
-		proMat = viz.MainWindow.getProjectionMatrix(viz.LEFT_EYE)
-		invProMat  = proMat.inverse()
-		outputString = outputString + '@ invProMat %s @ '  % (str(invProMat.get()))
+	
 	
 		return outputString #%f %d' % (viz.getFrameTime(), self.inCalibrateMode)
-						
-		
-#	def getOutput(self):
-#		
-#
-#		"""
-#		Returns a string describing the current state of the experiment, useful for recording.
-#		"""
-#		
-#		# Legend:
-#		# ** for 1 var
-#		# () for 2 vars
-#		# [] for 3 vars
-#		# <> for 4 vars
-#		# @@ for 16 vars (view and projection matrices)
-#		
-#		#### Eventflag
-#		# 1 ball launched
-#		# 3 ball has hit floor 
-#		# 4 ball has hit paddle
-#		# 5 ball has hit back wall
-#		# 6 ball has timed out
-#				
-#		outputString = '* frameTime %f * ' % (viz.getFrameTime())
-#		
-#		outputString = outputString + '* inCalibrateBool %f * ' % (self.inCalibrateMode)
-#		
-#		outputString = outputString + '* eventFlag %f * ' % (self.eventFlag.status)
-#		
-#		outputString = outputString + '* trialType %s * ' % (self.currentTrial.trialType)
-#		
-#		viewPos_XYZ = viz.MainView.getPosition()
-#		outputString = outputString + '[ viewPos_XYZ %f %f %f ] ' % (viewPos_XYZ[0],viewPos_XYZ[1],viewPos_XYZ[2])
-#		
-#		viewQUAT_XYZW = viz.MainView.getQuat()
-#		outputString = outputString + '< viewQUAT_XYZW %f %f %f %f > ' % (viewQUAT_XYZW [0],viewQUAT_XYZW [1],viewQUAT_XYZW [2],viewQUAT_XYZW[3])
-#		
-#		################################################
-#		################################################
-#		#### Racquet data
-#		
-#		paddlePos_XYZ = []
-#		paddleQUAT_XYZW = []
-#		paddleAngVel_XYZ = []
-#		
-#		if( self.room.paddle ):
-#			
-#			paddlePos_XYZ = self.room.paddle.visNode.getPosition()
-#			paddleQUAT_XYZW = self.room.paddle.visNode.getQuat()
-#			
-#			#paddleVel_XYZ = self.room.paddle.getVelocity()
-#			#paddleAngVel_XYZ = self.room.paddle.getAngularVelocity()
-#			
-#			
-#		else:
-#			paddlePos_XYZ = [nan,nan,nan]
-#			paddleQUAT_XYZW = [nan,nan,nan,nan]
-#			paddleVel_XYZ = [nan,nan,nan]
-#			paddleAngVel_XYZ = [nan,nan,nan]
-#			
-#		outputString = outputString + '[ paddlePos_XYZ %f %f %f ] ' % (paddlePos_XYZ[0],paddlePos_XYZ[1],paddlePos_XYZ[2])
-#		outputString = outputString + '< paddleQUAT_XYZW %f %f %f %f > ' % (paddleQUAT_XYZW[0],paddleQUAT_XYZW[1],paddleQUAT_XYZW[2],paddleQUAT_XYZW[3])
-#		
-#		#outputString = outputString + '[ paddleVel_XYZ %f %f %f ] ' % (paddleVel_XYZ[0],paddleVel_XYZ[1],paddleVel_XYZ[2])
-#		#outputString = outputString + '[ paddleAngVel_XYZ %f %f %f ] ' % (paddleAngVel_XYZ[0],paddleAngVel_XYZ[1],paddleAngVel_XYZ[2])
-#		
-#		################################################
-#		################################################
-#		#### BALL DATA
-#
-#		
-#		if( self.currentTrial.ballInRoom  ):
-#		# If ball is in room, set ball position and velocity	
-#			
-#			theBall = self.currentTrial.ballObj;
-#			
-#			ballPos_XYZ = theBall.visNode.getPosition()
-#			outputString = outputString + '[ ballPos_XYZ %f %f %f ] ' % (ballPos_XYZ [0],ballPos_XYZ [1],ballPos_XYZ [2])
-#			
-#			ballVel_XYZ = theBall.getVelocity()
-#			#theBall.visNode.getVelocity()
-#			outputString = outputString + '[ ballVel_XYZ %f %f %f ] ' % (ballVel_XYZ[0],ballVel_XYZ[1],ballVel_XYZ[2])
-#			
-#			ballPix_XY = viz.MainWindow.worldToScreen(ballPos_XYZ,viz.LEFT_EYE)
-#			outputString = outputString + '[ ballPix_XY %f %f %f ] ' % (ballPix_XY [0],ballPix_XY [1],ballPix_XY [2])
-#			
-#		else:
-#			
-#			# Ball not in room.  set pos / vel to Nan
-#			ballPos_XYZ = [nan,nan,nan]
-#			outputString = outputString + '[ ballPos_XYZ %f %f %f ] ' % (ballPos_XYZ [0],ballPos_XYZ [1],ballPos_XYZ [2])
-#			
-#			ballVel_XYZ = [nan,nan,nan]
-#			outputString = outputString + '[ ballVel_XYZ %f %f %f ] ' % (ballVel_XYZ [0],ballVel_XYZ [1],ballVel_XYZ [2])
-#			
-#			ballPix_XY = [nan,nan,nan]
-#			outputString = outputString + '[ ballPix_XY %f %f %f ] ' % (ballPix_XY [0],ballPix_XY [1],ballPix_XY [2])
-#			
-#		if( self.eventFlag.status == 1 ):
-#		# Launch mode.  Print initial conditions.
-#			
-#			outputString = outputString + '* ballDiameter %f * ' % (self.currentTrial.ballDiameter)
-#			outputString = outputString + '* ballGravity %f * ' % (self.currentTrial.gravity)
-#			outputString = outputString + '* ballPassingLoc %f * ' % (self.currentTrial.passingLoc)
-#			outputString = outputString + '* ballElasticity %f * ' % (self.currentTrial.ballElasticity)
-#			outputString = outputString + '* ballBounceDist %f * ' % (self.currentTrial.bounceDist)
-#			outputString = outputString + '* ballBounceSpeed %f * ' % (self.currentTrial.bounceSpeed)
-#			outputString = outputString + '* ballLaunchHeight %f * ' % (self.currentTrial.launchHeight)
-#			outputString = outputString + '* ballLaunchDistance %f * ' % (self.currentTrial.launchDistance)
-#			outputString = outputString + '* ballApproachAngleDegs %f * ' % (self.currentTrial.approachAngleDegs)
-#			
-#			outputString = outputString + '[ ballBounceLoc_XYZ %f %f %f ] ' % (self.currentTrial.ballBounceLoc_XYZ[0],self.currentTrial.ballBounceLoc_XYZ[1],self.currentTrial.ballBounceLoc_XYZ[2])
-#			outputString = outputString + '[ ballInitialPos_XYZ %f %f %f ] ' % (self.currentTrial.initialPos_XYZ[0],self.currentTrial.initialPos_XYZ[1],self.currentTrial.initialPos_XYZ[2])
-#			outputString = outputString + '[ initialVelocity_XYZ %f %f %f ] ' % (self.currentTrial.initialVelocity_XYZ[0],self.currentTrial.initialVelocity_XYZ[1],self.currentTrial.initialVelocity_XYZ[2])
-#		
-##				elif( self.eventFlag == 3 ):
-##					# bouncePos_XYZ
-##					print 'Event flag 3!  Writing ball position!'
-##					outputString = outputString + '[ ballOnPaddlePos_XYZ %f %f %f ] ' % (self.currentTrial.ballOnPaddlePos_XYZ[0],self.currentTrial.ballOnPaddlePos_XYZ[1],self.currentTrial.ballOnPaddlePos_XYZ[2])
-#			
-#		elif( self.eventFlag.status == 4 ):
-#			#print 'Event flag 4!  Writing paddle position!'
-#			outputString = outputString + '[ ballOnPaddlePosLoc_XYZ %f %f %f ] ' % (self.currentTrial.ballOnPaddlePosLoc_XYZ[0],self.currentTrial.ballOnPaddlePosLoc_XYZ[1],self.currentTrial.ballOnPaddlePosLoc_XYZ[2])
-#		
-#		# The end of the trial
-#		if( (self.eventFlag.status == 6 or self.eventFlag.status == 7) ): 
-#			
-#			# For convenience, this ensures the var  ballOnPaddlePosLoc_XYZ will show up once per trial
-#			if ( self.currentTrial.ballHasHitPaddle == False ):
-#				outputString = outputString + '[ ballOnPaddlePosLoc_XYZ %f %f %f ] ' % (nan, nan, nan)
-#				print '***** [ ballOnPaddlePosLoc_XYZ %f %f %f ] ' % (nan, nan, nan)
-#				
-#		##  MATRICES
-#		
-#		viewMat = viz.MainWindow.getMatrix(viz.LEFT_EYE)
-#		invViewMat = viewMat.inverse()
-#		
-#		outputString = outputString + '@ invViewMat %s @ '  % (str(invViewMat.get()))
-#		
-#		proMat = viz.MainWindow.getProjectionMatrix(viz.LEFT_EYE)
-#		invProMat  = proMat.inverse()
-#		outputString = outputString + '@ invProMat %s @ '  % (str(invProMat.get()))
-#		#outputString = outputString + '@ invProMat %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f @ '  % (invProMat.get())
-#		
-#		return outputString #%f %d' % (viz.getFrameTime(), self.inCalibrateMode)
-#	
-#	def vizQuatToMatlabQuat(self,vizQuat):
-#		
-#		# Viz is in ABCW
-#		
-#		# I want WABC, with Z and Y axes flipped
-#		oldTrans = viz.Transform()
-#		oldTrans.setQuat(vizQuat)		
-#		oldTrans.postAxisAngle(1,0,0,-90) # rotate -90 degs around X
-#		return oldTrans.getQuat()
-#		
-##		# negate Z axis
-##		
-###		
-###		#newTrans = viz.Transform()
-###		
-###		newTransVec = [];
-###		
-###		for rIdx in range(3):
-###			newTransVec.append(oldTrans.val(rIdx,0))
-###			newTransVec.append(oldTrans.val(rIdx,1))
-###			newTransVec.append(oldTrans.val(rIdx,3))
-###			newTransVec.append(oldTrans.val(rIdx,2))
-###		
-###		newTrans = viz.Transform()
-###		newTrans.setQuat(newTransVec)
-##		
-##		print 'VizQ: ' + str(oldTrans.getAxisAngle())
-##		print 'NewQ: ' + str(newTrans.getAxisAngle())
-##		
-##		a=1
-		
 		
 	def getEyeData(self):
 		
@@ -800,12 +446,6 @@ class Experiment(viz.EventClass):
 		# @@ for 16 vars (view and projection matrices)
 
 		outputString = ''		
-		
-		
-		
-		#pyArr = viz.add('arrington.dle')
-		#eyeA = pyArr.EYE_A;
-		
 
 		class VPX_RealType(Structure):
 			 _fields_ = [("x", c_float),("y", c_float)]
@@ -904,8 +544,8 @@ class Experiment(viz.EventClass):
 				
 		wii = viz.add('wiimote.dle')#Add wiimote extension
 		
-		vizact.onsensordown(self.config.wiimote,wii.BUTTON_B,self.launchKeyDown) 
-		vizact.onsensorup(self.config.wiimote,wii.BUTTON_B,self.launchKeyUp) 
+		#vizact.onsensordown(self.config.wiimote,wii.BUTTON_B,self.launchKeyDown) 
+		#vizact.onsensorup(self.config.wiimote,wii.BUTTON_B,self.launchKeyUp) 
 		
 		if( self.config.use_phasespace == True ):
 			
@@ -914,11 +554,8 @@ class Experiment(viz.EventClass):
 			vizact.onsensorup(self.config.wiimote,wii.BUTTON_DOWN,mocapSys.resetRigid,'hmd') 
 			vizact.onsensorup(self.config.wiimote,wii.BUTTON_UP,mocapSys.saveRigid,'hmd') 
 			
-			vizact.onsensorup(self.config.wiimote,wii.BUTTON_LEFT,mocapSys.resetRigid,'paddle') 
-			vizact.onsensorup(self.config.wiimote,wii.BUTTON_RIGHT,mocapSys.saveRigid,'paddle') 
-			
-			vizact.onsensorup(self.config.wiimote,wii.BUTTON_A,self.printQuats)
-			
+			#vizact.onsensorup(self.config.wiimote,wii.BUTTON_LEFT,mocapSys.resetRigid,'paddle') 
+			#vizact.onsensorup(self.config.wiimote,wii.BUTTON_RIGHT,mocapSys.saveRigid,'paddle') 
 	
 	def endExperiment(self):
 		# If recording data, I recommend ending the experiment using:
@@ -931,20 +568,7 @@ class Experiment(viz.EventClass):
 		print 'end experiment'
 		self.inProgress = False
 		soundBank.gong.play()
-		
-	def printQuats(self):
-		
-		viewMat = viz.MainView.getMatrix()
-		viewQUAT_XYZW = viewMat.getQuat()
-		
-		#outputString = outputString + '< viewQUAT_XYZW %f %f %f %f > ' % (viewQUAT_XYZW [3],viewQUAT_XYZW [0],viewQUAT_XYZW [1],viewQUAT_XYZW[2])
-		string = '< viewQUAT_WXYZ %f %f %f %f > ' % (viewQUAT_XYZW [3],viewQUAT_XYZW [0],viewQUAT_XYZW [2],viewQUAT_XYZW[1])
-		print string
-		
-		paddleMat = self.room.paddle.visNode.getMatrix()
-		paddleQUAT_XYZW = paddleMat.getQuat()
-		string = '< paddleQUAT_XYZW %f %f %f %f > ' % (paddleQUAT_XYZW[3],paddleQUAT_XYZW[0],paddleQUAT_XYZW[2],paddleQUAT_XYZW[1])
-		print string
+			
 	
 	def checkDVRStatus(self):
 	
@@ -953,69 +577,7 @@ class Experiment(viz.EventClass):
 		if( dvrWriter.isPaused == 1 ):
 			print '************************************ DVR IS PAUSED ************************************'
 
-	def setupPaddle(self):
-		# Performs several functions
-		# Creates either a fake paddle, a visual paddle, or a vis/phy/mocap paddle
-		
-		# FOr debugging. Creates a fake paddle in teh center of the room
-		if( self.config.expCfg['experiment']['useFakePaddle'] ):
-				
-#				if(any("paddle" in idx for idx in self.room.visObjNames_idx)):
-#					print 'removed paddle'
-#					self.room.paddle.remove()
-					
-				# Put a fake stationary paddle in the room
-				paddleSize = [.15, 1.5]
-				self.room.paddle = visEnv.visObj(self.room,'cylinder_Z',paddleSize)
-				self.room.paddle.enablePhysNode()
-				self.room.paddle.visNode.setPosition([0,1.6,-1])
-				#self.room.paddle.visNode.setAxisAngle(1,0,0,90)
-				self.room.paddle.visNode.color([0,1,0])
-				self.room.paddle.applyVisToPhys()
-				self.room.paddle.visNode.alpha(.5)
-				
-				return
-		
-		paddleRigid  = self.config.mocap.returnPointerToRigid('paddle')
-		
-		# If there is a visObj paddle and a paddle rigid, link em up!
-		if any("paddle" in idx for idx in self.room.visObjNames_idx): 
-			
-#			if(paddleRigid ):
-#				paddle = self.room.paddle
-#				# Link the visObj to the rigid 
-#				paddle.setMocapRigidBody(self.config.mocap,'paddle')
-#				paddle.toggleUpdateWithRigid()
-#				paddle.visNode.alpha(0)
-#				paddle.enablePhysNode()
-#				paddle.toggleUpdatePhysWithVis()
-#				paddle.setPosition([0,1.5,0])
-#				
-#						# Try to add the squash model
-#				pObj = viz.addChild('squash.osgb')
-#				
-#				pObj.setEuler(0,0,180)
-#				pObj.setParent(self.room.paddle.visNode)
-#				pObj.setScale([.9,.9,.9])
-#				pObj.setPosition(0,0.5,0,viz.ABS_PARENT)
-#		
-			
-			if(paddleRigid ):
-				paddle = self.room.paddle
-				# Link the visObj to the rigid 
-				paddle.setMocapRigidBody(self.config.mocap,'paddle')
-				paddle.toggleUpdateWithRigid()
-				#paddle.visNode.alpha(0)
-				paddle.enablePhysNode()
-				paddle.toggleUpdatePhysWithVis()
-				paddle.setPosition([0,1.5,0])
-				#paddle.visNode.setEuler(0,180,0)
-				#vizact.onupdate(10,paddle.visNode.setEuler,[0,90,0],viz.ABS_LOCAL)
-		
-		
-		
-		#paddle.obj.visible(viz.ON)					
-		#visEnv.drawMarkerSpheres(self.room,self.config.mocap)
+
 		
 ############################################################################################################
 ############################################################################################################
@@ -1129,79 +691,44 @@ class trial(viz.EventClass):
 		
 		self.trialType = trialType
 
-		## State flags
-		self.ballInRoom = False; # Is ball in room?
-		self.ballInInitialState = False; # Is ball ready for launch?
-		self.ballLaunched = False; # Has a ball been launched?  Remains true after ball disappears.
-		self.ballHasBouncedOnFloor = False;
-		self.ballHasHitPaddle = False;
+#		## State flags
+#		self.ballInRoom = False; # Is ball in room?
+#		self.ballInInitialState = False; # Is ball ready for launch?
+#		self.ballLaunched = False; # Has a ball been launched?  Remains true after ball disappears.
+#		self.ballHasBouncedOnFloor = False;
+#		self.ballHasHitPaddle = False;
 		
-		## Trial event data
-		self.ballOnPaddlePos_XYZ = []
-		self.ballOnPaddlePosLoc_XYZ = []
 		
 		## Timer objects
-		self.timeSinceLaunch = [];
+		#self.timeSinceLaunch = [];
 		
 		self.ballObj = -1;
 		
-		### Below this is all the code used to generate ball trajectories
-		self.ballFlightMaxDur = float(config.expCfg['experiment']['ballFlightMaxDur'])
 		
-		#  Set ball color.
-		try:
-			self.ballColor_RGB = map(float,config.expCfg['trialTypes'][self.trialType]['ballColor_RGB'])
-		except:
-			print 'Using def color'
-			self.ballColor_RGB = map(float,config.expCfg['trialTypes']['default']['ballColor_RGB'])
+		###########################################################################################
+		###########################################################################################
+		## Get fixed variables here
+		
+		#  Example: Set ball color.
+#		#try:
+#			self.ballColor_RGB = map(float,config.expCfg['trialTypes'][self.trialType]['ballColor_RGB'])
+#		except:
+#			print 'Using def color'
+#			self.ballColor_RGB = map(float,config.expCfg['trialTypes']['default']['ballColor_RGB'])
 		
 		# The rest of variables are set below, by drawing values from distributions
 #		
-		self.ballDiameter_distType = []
-		self.ballDiameter_distParams = []
-		self.ballDiameter = []
+#		Example: ballDiameter and gravity
+#		self.ballDiameter_distType = []
+#		self.ballDiameter_distParams = []
+#		self.ballDiameter = []
+#		
+#		self.gravity_distType = []
+#		self.gravity_distParams = []
+#		self.gravity = []
 		
-		self.gravity_distType = []
-		self.gravity_distParams = []
-		self.gravity = []
 		
-		self.passingLoc_distType = []
-		self.passingLoc_distParams = []
-		self.passingLoc = []
-		
-		self.ballElasticity_distType = []
-		self.ballElasticity_distParams = []
-		self.ballElasticity = []
-		
-		self.bounceDist_distType = []
-		self.bounceDist_distParams = []
-		self.bounceDist = []
-		
-		self.bounceSpeed_distType = []
-		self.bounceSpeed_distParams = []
-		self.bounceSpeed = []
-		
-		self.launchHeight_distType = []
-		self.launchHeight_distParams = []
-		self.launchHeight = []
-		
-		self.launchDistance_distType = []
-		self.launchDistance_distParams = []
-		self.launchDistance = []
-		
-		self.approachAngleDegs_distType = []
-		self.approachAngleDegs_distParams = []
-		self.approachAngleDegs = []
-		
-		self.ballBounceLoc_XYZ = [0,0,0]
-		self.initialPos_XYZ = [0,0,0]
-		self.initialVelocity_XYZ = [0,0,0]
-		
-		self.flightDurationError = []
-		
-		##########################################################################
-		##########################################################################
-		# Go into config file and define values 
+		# Go into config file and draw variables from the specified distributions
 		# When a distribution is specified, select a value from the distribution
 		
 		variablesInATrial = config.expCfg['trialTypes']['default'].keys()
@@ -1211,75 +738,24 @@ class trial(viz.EventClass):
 			
 				varName = variablesInATrial[varIdx][0:-9]
 
-				
-				try:
-					distType, distParams, value = self._setValueOrUseDefault(config,varName)
-				except:
-					print 'Error in main.trial.init.drawNumberFromDist()'
-					print 'Variable name is: ' + varName
-				try:
-					exec( 'self.' + varName + '_distType = distType' )
-					exec( 'self.' + varName + '_distParams = distParams' )
-					exec( 'self.' + varName + '_distType = distType' )
-					# Draw value from a distribution
-					exec( 'self.' + varName + ' = drawNumberFromDist( distType , distParams);' )
-				except:
-					a=1
-				
+				distType, distParams, value = self._setValueOrUseDefault(config,varName)
+				exec( 'self.' + varName + '_distType = distType' )
+				exec( 'self.' + varName + '_distParams = distParams' )
+				exec( 'self.' + varName + '_distType = distType' )
+				# Draw value from a distribution
+				exec( 'self.' + varName + ' = drawNumberFromDist( distType , distParams);' )
+					
+	
+	 
+#	def removeBall(self):
+#		An example of how to remove an object from the room
+#		self.ballObj.remove()
+#		self.ballObj = -1
+#		
+#		self.ballInRoom = False
+#		self.ballInInitialState = False
+#		self.ballLaunched = False
 		
-		##########################################################################
-		##########################################################################
-		##  Calculate ball trajectory
-		
-		#######################################
-		## Initial positions
-		
-		import math
-		
-		self.ballBounceLoc_XYZ[0] = math.sin(math.radians(self.approachAngleDegs))*self.bounceDist;
-		self.ballBounceLoc_XYZ[1] = self.ballDiameter/2
-		self.ballBounceLoc_XYZ[2] = math.cos(math.radians(self.approachAngleDegs))*self.bounceDist;
-		
-		self.initialPos_XYZ[0] = math.sin(math.radians(self.approachAngleDegs))*self.launchDistance;
-		self.initialPos_XYZ[1] = self.launchHeight
-		self.initialPos_XYZ[2] = math.cos(math.radians(self.approachAngleDegs))*self.launchDistance;
-		
-		##  Account for room offset
-		
-		#self.initialPos_XYZ[0] = self.initialPos_XYZ[0] + config.expCfg['room']['translateRoom_X']
-		#self.initialPos_XYZ[2] = self.initialPos_XYZ[2] + config.expCfg['room']['translateRoom_Z']
-		
-		#self.ballBounceLoc_XYZ[0] = self.ballBounceLoc_XYZ[0] + config.expCfg['room']['translateRoom_X']
-		#self.ballBounceLoc_XYZ[2] = self.ballBounceLoc_XYZ[2] + config.expCfg['room']['translateRoom_Z']
-		
-		#######################################
-		## Set and record velocities
-		
-		# vel = sqrt( v^2+2ad )
-		# tmp.initBallVelZ = sqrt( pow(tmp.bounceSpeed,2)+ 2*-9.8f*(tmp.initBallZ-tmp.ballBounceZ));
-		
-		self.initialVelocity_XYZ[1] = math.sqrt( (self.bounceSpeed*self.bounceSpeed)+ 
-			2 * -self.gravity * (self.initialPos_XYZ[1]-self.ballBounceLoc_XYZ[1]));
-			
-		durationOfPreBounceFlight = (self.bounceSpeed - self.initialVelocity_XYZ[1]) / -self.gravity
-		
-		self.initialVelocity_XYZ[0] = (self.ballBounceLoc_XYZ[0]-self.initialPos_XYZ[0]) / durationOfPreBounceFlight;
-		self.initialVelocity_XYZ[2] = (self.ballBounceLoc_XYZ[2]-self.initialPos_XYZ[2]) / durationOfPreBounceFlight;
-		
-		# For debugging, compare these values!
-		self.predictedPreBounceFlightDur = durationOfPreBounceFlight
-		self.launchTime = []
-		
-	def removeBall(self):
-		
-		self.ballObj.remove()
-		self.ballObj = -1
-		
-		self.ballInRoom = False
-		self.ballInInitialState = False
-		self.ballLaunched = False
-		
-		#print 'Cleaned up ball'
 
 	def _setValueOrUseDefault(self,config,paramPrefix):
 		
@@ -1302,46 +778,33 @@ class trial(viz.EventClass):
 		return distType,distParams,value
 			
 
-	def placeBall(self,room):
+#	def placeBall(self,room):
+#		# An example of how to place an object in the room
+#		
+#		print self.initialPos_XYZ
+#		
+#		self.ballObj = visEnv.visObj(room,'sphere',self.ballDiameter/2,self.initialPos_XYZ,self.ballColor_RGB)
+#
+#		self.ballObj.toggleUpdateWithPhys()
+#		self.ballObj.setVelocity([0,0,0])
+#		
+#		
+#		#print 'BALL ELASTICITY:' + str(self.ballElasticity)
+#		self.ballObj.physNode.setBounciness(self.ballElasticity)
+#		self.ballObj.physNode.disableMovement() # Makes it stand in place
+#
+#		# Costly, in terms of computation
+#		#self.ballObj.projectShadows(self.ballObj.parentRoom.floor.visNode)
+#		
+#		# Register it as something that will stick to the paddle
+#		self.ballObj.physNode.setStickUponContact( room.paddle.physNode.geom )
+#		
+#		self.ballInRoom = True
+#		self.ballInInitialState = True
+#		self.ballLaunched = False 
+#		self.ballPlacedOnThisFrame = True
+		
 	
-		
-		print self.initialPos_XYZ
-		
-		self.ballObj = visEnv.visObj(room,'sphere',self.ballDiameter/2,self.initialPos_XYZ,self.ballColor_RGB)
-
-		self.ballObj.toggleUpdateWithPhys()
-		self.ballObj.setVelocity([0,0,0])
-		
-		
-		#print 'BALL ELASTICITY:' + str(self.ballElasticity)
-		self.ballObj.physNode.setBounciness(self.ballElasticity)
-		self.ballObj.physNode.disableMovement() # Makes it stand in place
-
-		# Costly, in terms of computation
-		#self.ballObj.projectShadows(self.ballObj.parentRoom.floor.visNode)
-		
-		# Register it as something that will stick to the paddle
-		self.ballObj.physNode.setStickUponContact( room.paddle.physNode.geom )
-		
-		self.ballInRoom = True
-		self.ballInInitialState = True
-		self.ballLaunched = False 
-		self.ballPlacedOnThisFrame = True
-		
-	def launchBall(self):
-		
-		if( self.ballObj == False ):
-			print 'No ball present.'
-			return
-		
-		self.ballObj.physNode.enableMovement()
-		self.ballObj.setVelocity(self.initialVelocity_XYZ)
-		
-		self.ballInRoom = True
-		self.ballInInitialState = False
-		self.ballLaunched = True
-		
-		self.launchTime = viz.getFrameTime()
 	
 ################################################################################################################   
 ################################################################################################################
@@ -1360,12 +823,7 @@ experimentConfiguration = vrlabConfig.VRLabConfig(expConfigFileName)
 experimentObject = Experiment(experimentConfiguration)
 experimentObject.start()
 
-#pV = experimentObject.room.paddle.visNode
-#eA = vizact.onupdate(8,pV.setEuler,[0,90,0],viz.ABS_LOCAL)
-
-#pObj = experimentObject.room.paddle.obj
-#pObj.setPosition(0,0.54,0,viz.ABS_PARENT)
-
+# If you want to see spheres for each marker
 #visEnv.drawMarkerSpheres(experimentObject.room,experimentObject.config.mocap)
 
 if( experimentObject.hmdLinkedToView == False ):
