@@ -211,6 +211,7 @@ class rigidObject(viz.EventClass):
 		markerCount = 0;
 		center_GlobalXYZ = [0,0,0]
 		
+		
 		for mIdx in range(len(self.avgMarkerList_midx)):
 			mNum = self.avgMarkerList_midx[mIdx]
 			center_GlobalXYZ[0] = center_GlobalXYZ[0] + newPos_midx_GlobalXYZ[mNum][0]
@@ -328,8 +329,8 @@ class phasespaceInterface(viz.EventClass):
 			self.serverAddress = '192.168.1.230';
 			
 			self.rigidFileNames_ridx= ['hmd-nvisMount.rb','paddle-hand.rb']
-			self.rigidAvgMarkerList_rIdx_mId = '[1,2],[3,5]'
-			self.rigidOffsetMM_ridx_WorldXYZ = '[0,0,0],[0,0,0]'
+			self.rigidAvgMarkerList_rIdx_mId = [[1,2],[3,5]]
+			self.rigidOffsetMM_ridx_WorldXYZ = [[0,0,0],[0,0,0]]
 			
 			#self.rigidBodyShapes_ridx = ['sphere','cylinder']
 			#self.rigidBodySizes_ridx = [[.1],[.03,.09]]
@@ -340,7 +341,9 @@ class phasespaceInterface(viz.EventClass):
 			self.owlParamInterp = 0
 			self.owlParamMarkerCondThresh = 50
 			self.owlParamPostProcess = 0
-			self.owlParamModeNum = 3
+			
+			self.owlParamModeNum = 1
+			print '**** Using default MODE #' + str(self.owlParamModeNum) + ' ****'
 			
 		else:
 			
@@ -417,8 +420,7 @@ class phasespaceInterface(viz.EventClass):
 			else:
 				rigidAvgMarkerList_mId  = self.rigidAvgMarkerList_rIdx_mId[rigidIdx]
 			
-			
-			
+			rigidOffsetMM_WorldXYZ = self.rigidOffsetMM_ridx_WorldXYZ[rigidIdx]
 			self.allRigidBodyObjects.append( rigidObject(rigidIdx,self.phaseSpaceFilePath,self.rigidFileNames_ridx[rigidIdx],rigidAvgMarkerList_mId,rigidOffsetMM_WorldXYZ ))
 			
 		### Track markers not on rigid bodies 
