@@ -141,40 +141,80 @@ class RigidTracker(PointTracker):
         self.filename = []
     
     def _loadPoseFromFile(self):
-
-		import os.path
-		openfile = [];
-		openfile = open( self.filepath + self.filename, 'r' );
-		
-		lineData = openfile.readlines();
-
-		parsedData = [];
-
-		markerID = [];
-		markerPos = [];
-		
-		count = 0;
-		
-		for currentLine in lineData:
-			
-			tempLineDataList = currentLine.split(',');
-			
-			markerID.append( int(tempLineDataList[0]) );
-			
-			markerPos.append( map( float, tempLineDataList[1].split() ) );
-			
-			count += 1;
-			
-		#rof
-			
-		self.markerID_midx = markerID
-		self.markerPos_midx_localXYZ = markerPos
-		
-		openfile.close()
-		
-		print 'Mocap: Read ' + str(count) + ' lines from the rigid body file.'
-		if count == 0: print 'This is likely to cause OWL.init() to fail'
+        ''' Set marker positions to positions contained in a specific *.rb file
+        '''
+        import os.path
+        openfile = [];
+        openfile = open( self.filepath + self.filename, 'r' );
         
+        lineData = openfile.readlines();
+
+        parsedData = [];
+
+        markerID = [];
+        markerPos = [];
+        
+        count = 0;
+        
+        for currentLine in lineData:
+            
+            tempLineDataList = currentLine.split(',');
+            
+            markerID.append( int(tempLineDataList[0]) );
+            
+            markerPos.append( map( float, tempLineDataList[1].split() ) );
+            
+            count += 1;
+            
+        #rof
+            
+        self.markerID_midx = markerID
+        self.markerPos_midx_localXYZ = markerPos
+        
+        openfile.close()
+        
+        print 'Mocap: Read ' + str(count) + ' lines from the rigid body file.'
+        if count == 0: print 'This is likely to cause OWL.init() to fail'
+
+    def _getLocalPositions(self):
+        
+        ''' Returns markerPositions within a local frame of reference
+        Returns
+        -------
+        A list of tuples
+        '''
+        
+        logging.info('Getting local marker positions %s', self.marker_ids)
+        
+        globalPositions = []
+        localPositions = []
+        com = []
+        
+        with self._lock:
+            for m in self.marker_ids:
+                marker = self._raw_markers[self.marker_ids.index(m)]
+                if marker is None or not 0 < marker.cond < 100:
+                    logging.error('missing marker %d for reset', m)
+                    return
+                globalPositions.append(marker.pos)
+                if m in self.center_marker_ids:
+                    com.append(marker.pos)
+
+        # compute center of mass
+        cx = sum(x for x, _, _ in com) / len(com)
+        cy = sum(y for _, y, _ in com) / len(com)
+        cz = sum(z for _, _, z in com) / len(com)
+        logging.info('body center: (%s, %s, %s)', cx, cy, cz)
+    
+
+        # Construct marker_map, a dictionary of pos tuples
+        # using marker ID's as keys
+        localPositions = []
+        for i, (x, y, z) in enumerate(globalPositions):
+            localPositions.append((x - cx, y - cy, z - cz))
+            
+        return localPositions
+            
     def get_pose(self):
         '''Return the current pose for our rigid body.
 
@@ -211,7 +251,7 @@ class RigidTracker(PointTracker):
 
     def update_pose(self, pose):
         '''Update the pose (and transform) for this rigid body.
-
+        Note that self._localOffset is implemented here.
         This should really only be called by the Phasespace object.
 
         Parameters
@@ -234,9 +274,12 @@ class RigidTracker(PointTracker):
             
     def save(self):
         
+        '''Save rigid body out to *.rb file
+        '''
+        
         fileObject = open(self.filepath + 'temp.rb','w')
         
-        localPositions = self.getLocalPositions()
+        localPositions = self._getLocalPositions()
                             
         # Get old marker id's and new positions
         oldRigidID_midx = self.getLocalPositions()
@@ -260,81 +303,6 @@ class RigidTracker(PointTracker):
         print "Rigid body definition written to file"
          # reset phasespace marker positions
         
-        
-        
-#    def save(self):
-#        
-#        '''Write the current pose for this rigid body out to a file.
-#
-#        Parameters
-#        ----------
-#        filename : str
-#            The name of the file to write containing our rigid body information.
-#            (Typically this file ends with a .rb extension.)
-#        '''
-#
-#        def psXYZToVizardXYZ(xyzTuple): # converts Phasespace position to vizard position
-#            return [xyzTuple[2] * 1000, xyzTuple[1] * 1000, xyzTuple[0] * 1000]
-#            
-#        # First write to RigidName-temp.rb
-#        tempFileName = self.filepath + 'temp.rb'
-#        tempFileObject = open(tempFileName, 'w')
-#        
-#        with tempFileObject as handle:
-#            for i in self.marker_ids:
-#                
-#                xyz = self.get_marker(i).pos
-#                #handle.write('{}, {} {} {}\n'.format(i, psXYZToVizardXYZ(*self.get_marker(i).pos)))
-#                handle.write('{}, {} {} {}\n'.format(i,xyz[0],xyz[1],xyz[2]))
-#
-#        tempFileObject.close()
-#
-#        # Now, rename RigidName-temp.rb to overwite RigidName.rb
-#        from os import remove
-#        from shutil import move
-#
-#        remove(self.filepath + self.filename)
-#        move(tempFileName, self.filepath + self.filename)
-#
-#        print "Rigid body definition written to file: " + str(self.filepath + self.filename)	
-#        
-    def getLocalPositions(self):
-        
-        '''Returns markerPositions within a local frame of reference
-        Return format is a list of tuples
-        '''
-        
-        logging.info('Getting local marker positions %s', self.marker_ids)
-        
-        globalPositions = []
-        localPositions = []
-        com = []
-        
-        with self._lock:
-            for m in self.marker_ids:
-                marker = self._raw_markers[self.marker_ids.index(m)]
-                if marker is None or not 0 < marker.cond < 100:
-                    logging.error('missing marker %d for reset', m)
-                    return
-                globalPositions.append(marker.pos)
-                if m in self.center_marker_ids:
-                    com.append(marker.pos)
-
-        # compute center of mass
-        cx = sum(x for x, _, _ in com) / len(com)
-        cy = sum(y for _, y, _ in com) / len(com)
-        cz = sum(z for _, _, z in com) / len(com)
-        logging.info('body center: (%s, %s, %s)', cx, cy, cz)
-    
-
-        # Construct marker_map, a dictionary of pos tuples
-        # using marker ID's as keys
-        localPositions = []
-        for i, (x, y, z) in enumerate(globalPositions):
-            localPositions.append((x - cx, y - cy, z - cz))
-            
-        return localPositions
-        
     def reset(self):
         
         '''Reset this rigid body based on the current locations of its markers.
@@ -342,7 +310,7 @@ class RigidTracker(PointTracker):
 
         logging.info('resetting rigid body %s', self.marker_ids)
 
-        localPositions = self.getLocalPositions()
+        localPositions = self._getLocalPositions()
                 
         OWL.owlTracker(self._index, OWL.OWL_DISABLE)
         
@@ -351,6 +319,7 @@ class RigidTracker(PointTracker):
             OWL.owlMarkerfv(OWL.MARKER(self._index, i),
                             OWL.OWL_SET_POSITION,
                             [x,y,z])
+                            
         OWL.owlTracker(self._index, OWL.OWL_ENABLE)
 
 
@@ -382,10 +351,6 @@ class Phasespace(viz.EventClass):
         
         self.rbTrackers_rbIdx = []; # A list full of rigidBodyTrackers
         self.markerTrackers_mIdx = []; # Note that these are vectors of Phasespace marker objects
-     
-#    def __init__(self, self.serverAddress, self.owlParamFrequ=200.,
-#                 scale=(0.001, 0.001, 0.001), offset=(0, 0, 0),
-#                 postprocess=False, slave=False):
         
         if config==None:
             
@@ -398,11 +363,7 @@ class Phasespace(viz.EventClass):
             self.rigidFileNames_ridx= ['hmd-nvisMount.rb','paddle-hand.rb']
             self.rigidAvgMarkerList_rIdx_mId = [[1,2],[3,5]]
             self.rigidOffsetMM_ridx_WorldXYZ = [[0,0,0],[0,0,0]]
-            
-            #self.rigidBodyShapes_ridx = ['sphere','cylinder']
-            #self.rigidBodySizes_ridx = [[.1],[.03,.09]]
-            #self.rigidBodyToggleVisibility_ridx = [0,1]
-            
+                        
             self.owlParamMarkerCount = 20
             self.owlParamFrequ = OWL.OWL_MAX_FREQUENCY
             self.owlParamInterp = 0
@@ -685,9 +646,12 @@ class Phasespace(viz.EventClass):
         return tracker
         
     def get_rigidTracker(self,fileName):
-    
-        #  Accepts partial filenames, such as 'hmd' or 'paddle'
-        #  Will return the first match found.
+        '''
+        Accepts a partial filenames, such as 'hmd' or 'paddle'
+        Will return a pointer to ta rigidTracker
+        This tracker is the first rigid body that contains this string
+        '''
+        
         
         for rigidIdx in range(len(self.rigidFileNames_ridx)):
             if( self.rigidFileNames_ridx[rigidIdx].find(fileName) > -1 ):
@@ -697,32 +661,47 @@ class Phasespace(viz.EventClass):
         print 'returnPointerToRigid: Could not find ' + fileName
         return 0
     
-#    def get_MarkerTracker(self,markerIdx):
-#
-#        # Uses marker Idx to find the marker's position
-#        for mIdx in range(len(self.alPSMarkers_midx)):
-#            if( self.alPSMarkers_midx[mIdx].id == self.markerServerID_mIdx[markerIdx] ):
-#                return self.alPSMarkers_midx[mIdx]
-#
-#        print 'returnPointerToMarker: Could not find marker number' + str(markerIdx)
-#        return 0
-
     def get_MarkerPos(self,markerIdx):
-            
-            # Returns marker position in vizard format
-            markerTrackers_mIdx = self.get_markers()
-            return markerTrackers_mIdx[markerIdx].pos
+        ''' Returns marker position in vizard format
+        '''
+        markerTrackers_mIdx = self.get_markers()
+        return markerTrackers_mIdx[markerIdx].pos
                 
     def get_MarkerCond(self,markerIdx):
+        '''Returns marker condition
+        
+        '''            
+        markerTrackers_mIdx = self.get_markers()
+        return markerTrackers_mIdx[markerIdx].cond
             
-            # Returns marker position in vizard format
-            markerTrackers_mIdx = self.get_markers()
-            return markerTrackers_mIdx[markerIdx].cond
+
+    def resetRigid( self, fileName ):
+        '''Finds the rigid body corresponding to this filename.
+        Resets marker positions based upon current position
+        '''
+        
+        rigidBody = self.get_rigidTracker( fileName );
+        
+        if( rigidBody ):
             
-#            # Uses marker Idx to find the marker's position            
-#            for mIdx in range(len(markerTrackers_mIdx)):
-#                if( self.markerTrackers_mIdx[mIdx].id == self.markerServerID_mIdx[markerIdx] ):
-#                    return self.alPSMarkers_midx[mIdx]
-#
-#            print 'returnPointerToMarker: Could not find marker number' + str(markerIdx)
-#            return 0
+            #if( self.mainViewUpdateAction ):
+            rigidBody.reset()
+        else:
+            
+            print ('Error: Rigid body not initialized');
+            
+        #fi
+        
+    #fed
+        
+    def saveRigid(self,fileName):
+        '''Finds the rigid body corresponding to this filename.
+        Saves marker positions out to *.rb file
+        '''
+        
+        rigidBody = self.get_rigidTracker(fileName)
+        
+        if(rigidBody):
+            rigidBody.save()
+        else: print 'Error: Rigid body not initialized'
+
