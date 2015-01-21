@@ -5,6 +5,7 @@ import sys
 # vizard imports
 import nvis
 import viz
+
 import vizconfig
 
 # local imports

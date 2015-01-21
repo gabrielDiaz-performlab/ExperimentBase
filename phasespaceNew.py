@@ -234,20 +234,16 @@ class RigidTracker(PointTracker):
             
     def save(self):
         
-        fileObject = open(self.filepath + 'temp.rb','w')#self.fileName , 'w')
+        fileObject = open(self.filepath + 'temp.rb','w')
         
-        for i, (x, y, z) in enumerate(positions):
-            OWL.owlMarkerfv(OWL.MARKER(self._index, i),
-                            OWL.OWL_SET_POSITION,
-                            (x - cx, y - cy, z - cz))
+        localPositions = self.getLocalPositions()
                             
         # Get old marker id's and new positions
-        oldRigidID_midx = self.markerID_midx
-        #newRigidPos_midx_xyz = self.markerPos_midx_localXYZ
+        oldRigidID_midx = self.getLocalPositions()
         
-        for idx in range(len(newRigidPos_midx_xyz )):
-            posString = str(newRigidPos_midx_xyz[idx][0]) + ' ' + str(newRigidPos_midx_xyz[idx][1]) + ' ' + str(newRigidPos_midx_xyz[idx][2]);
-            newLine = str(oldRigidID_midx[idx]) + ', ' + posString + '\n'
+        for idx in range(len(oldRigidID_midx)):
+            posString = str(oldRigidID_midx[idx][0]) + ' ' + str(oldRigidID_midx[idx][1]) + ' ' + str(oldRigidID_midx[idx][2]);
+            newLine = str(self.marker_ids[idx]) + ', ' + posString + '\n'
             fileObject.write(newLine);
             
         fileObject.close();
@@ -258,8 +254,8 @@ class RigidTracker(PointTracker):
         from os import remove
         from shutil import move
 
-        remove(self.filePath + self.fileName)
-        move(self.filePath + 'temp.rb', self.filePath + self.fileName)
+        remove(self.filepath + self.filename)
+        move(self.filepath + 'temp.rb', self.filepath + self.filename)
 
         print "Rigid body definition written to file"
          # reset phasespace marker positions
@@ -305,7 +301,9 @@ class RigidTracker(PointTracker):
     def getLocalPositions(self):
         
         '''Returns markerPositions within a local frame of reference
+        Return format is a list of tuples
         '''
+        
         logging.info('Getting local marker positions %s', self.marker_ids)
         
         globalPositions = []
@@ -327,50 +325,32 @@ class RigidTracker(PointTracker):
         cy = sum(y for _, y, _ in com) / len(com)
         cz = sum(z for _, _, z in com) / len(com)
         logging.info('body center: (%s, %s, %s)', cx, cy, cz)
-        
+    
+
+        # Construct marker_map, a dictionary of pos tuples
+        # using marker ID's as keys
+        localPositions = []
         for i, (x, y, z) in enumerate(globalPositions):
-            localPositions[i] = (x - cx, y - cy, z - cz)
-            marker_map = {self.marker_ids: localPositions}
+            localPositions.append((x - cx, y - cy, z - cz))
             
-        a=1
-        
-        #marker_map = sorted(marker_map.iteritems())
-        
         return localPositions
         
     def reset(self):
+        
         '''Reset this rigid body based on the current locations of its markers.
         '''
+
         logging.info('resetting rigid body %s', self.marker_ids)
 
-#        # assemble marker positions
-#        positions = []
-#        com = []
-#        with self._lock:
-#            for m in self.marker_ids:
-#                marker = self._raw_markers[self.marker_ids.index(m)]
-#                if marker is None or not 0 < marker.cond < 100:
-#                    logging.error('missing marker %d for reset', m)
-#                    return
-#                positions.append(marker.pos)
-#                if m in self.center_marker_ids:
-#                    com.append(marker.pos)
-#
-#        # compute center of mass
-#        cx = sum(x for x, _, _ in com) / len(com)
-#        cy = sum(y for _, y, _ in com) / len(com)
-#        cz = sum(z for _, _, z in com) / len(com)
-#        logging.info('body center: (%s, %s, %s)', cx, cy, cz)
-
-        # reset phasespace marker positions
+        localPositions = self.getLocalPositions()
+                
         OWL.owlTracker(self._index, OWL.OWL_DISABLE)
         
-        localPositions = getLocalPositions()
+        for i, (x, y, z) in enumerate(localPositions):
         
-        for i, (x, y, z) in enumerate(positions):
             OWL.owlMarkerfv(OWL.MARKER(self._index, i),
                             OWL.OWL_SET_POSITION,
-                            (x - cx, y - cy, z - cz))
+                            [x,y,z])
         OWL.owlTracker(self._index, OWL.OWL_ENABLE)
 
 
