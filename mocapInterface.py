@@ -172,7 +172,7 @@ class rigidObject(viz.EventClass):
 		remove(self.filePath + self.fileName)
 		move(self.filePath + 'temp.rb', self.filePath + self.fileName)
 
-		print "Rigid body definition written to file"	
+		print "Rigid body definition written to file"
 		
 	def resetRigid( self, alPSMarkers_midx  ):
 		
@@ -668,7 +668,6 @@ class phasespaceInterface(viz.EventClass):
 									
 			
 	def resetRigid( self, fileName ):
-		
 		
 		rigidBody = self.returnPointerToRigid( fileName );
 		
